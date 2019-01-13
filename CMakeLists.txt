@@ -273,7 +273,7 @@ if (WIN32)
 endif (WIN32)
 
 # Unity
-# option(BUILD_UNITY_SUPPORT "Build OpenPose as a Unity plugin." OFF)
+option(BUILD_UNITY_SUPPORT "Build OpenPose as a Unity plugin." OFF)
 
 # Build as shared library
 option(BUILD_SHARED_LIBS "Build as shared lib." ON)
@@ -639,7 +639,8 @@ if (UNIX OR APPLE)
       file(GLOB CAFFE_DIR_VALID ${CMAKE_SOURCE_DIR}/3rdparty/caffe/*)
       list(LENGTH CAFFE_DIR_VALID CAFFE_DIR_VALID_LENGTH)
       if (CAFFE_DIR_VALID_LENGTH EQUAL 0)
-        execute_process(COMMAND git submodule update --init --recursive)
+        execute_process(COMMAND git submodule update --init ${CMAKE_SOURCE_DIR}/3rdparty/caffe)
+        # execute_process(COMMAND git submodule update --init --recursive) # This would initialize them all
       else (CAFFE_DIR_VALID_LENGTH EQUAL 0)
         message(STATUS "Caffe has already been downloaded.")
       endif (CAFFE_DIR_VALID_LENGTH EQUAL 0)
@@ -700,7 +701,7 @@ if (UNIX OR APPLE)
 
       # One for Intel Branch and one for Master
       if (USE_MKL)
-        ExternalProject_Add(openpose_caffe
+        ExternalProject_Add(openpose_lib
           SOURCE_DIR ${CAFFE_URL}
           PREFIX ${CAFFE_PREFIX}
           CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
@@ -720,7 +721,7 @@ if (UNIX OR APPLE)
           -DUSE_OPENCV=OFF)
           # -DOpenCV_DIR=${OpenCV_DIR})
       else (USE_MKL)
-        ExternalProject_Add(openpose_caffe
+        ExternalProject_Add(openpose_lib
           SOURCE_DIR ${CAFFE_URL}
           PREFIX ${CAFFE_PREFIX}
           CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
@@ -739,10 +740,10 @@ if (UNIX OR APPLE)
           # -DOpenCV_DIR=${OpenCV_DIR})
       endif (USE_MKL)
 
-      ExternalProject_Get_Property(openpose_caffe install_dir)
+      ExternalProject_Get_Property(openpose_lib install_dir)
 
       if (NOT Caffe_FOUND)
-        add_custom_command(TARGET openpose_caffe
+        add_custom_command(TARGET openpose_lib
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}
             COMMAND $(MAKE)
@@ -912,12 +913,25 @@ download_model("hand" ${DOWNLOAD_HAND_MODEL} hand/pose_iter_102000.caffemodel
 
 message(STATUS "Models Downloaded.")
 
+
 ### PYTHON
-if (Caffe_FOUND)
-  if(BUILD_PYTHON)
+if (BUILD_PYTHON)
+  if (WIN32)
+    execute_process(COMMAND cmd /c cd ${CMAKE_SOURCE_DIR} & git submodule update --init 3rdparty/pybind11/)
+    add_subdirectory(3rdparty/pybind11)
     add_subdirectory(python)
-  endif (BUILD_PYTHON)
-endif(Caffe_FOUND)
+  elseif (UNIX OR APPLE)
+    if (Caffe_FOUND)
+      execute_process(COMMAND git submodule update --init ${CMAKE_SOURCE_DIR}/3rdparty/pybind11/)
+      # execute_process(COMMAND git submodule update --init --recursive) # This would initialize them all
+      add_subdirectory(3rdparty/pybind11)
+      add_subdirectory(python)
+    endif (Caffe_FOUND)
+  else (WIN32)
+    message(FATAL_ERROR "Unknown OS.")
+  endif (WIN32)
+endif (BUILD_PYTHON)
+
 
 ### GENERATE DOCUMENTATION
 if (UNIX OR APPLE)

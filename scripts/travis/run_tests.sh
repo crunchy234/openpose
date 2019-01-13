@@ -14,7 +14,7 @@ if [[ $RUN_EXAMPLES == true ]] ; then
   ./build/examples/openpose/openpose.bin --net_resolution -1x32 --image_dir examples/media/ --write_json output/ --display 0 --render_pose 0
   echo " "
 
-  echo "Tutorial Add Moduel: Example 1..."
+  echo "Tutorial Add Module: Example 1..."
   ./build/examples/tutorial_add_module/1_custom_post_processing.bin --net_resolution -1x32 --image_dir examples/media/ --write_json output/ --display 0 --render_pose 0
   echo " "
 
@@ -38,9 +38,11 @@ if [[ $RUN_EXAMPLES == true ]] ; then
 
   # Python examples
   if [[ $WITH_PYTHON == true ]] ; then
-    echo "Python API C++: Example 1..."
-    echo "TODO: Add Python examples in here..."
+    echo "Python API C++: OpenPose demo..."
+    cd build/examples/tutorial_api_python
+    python openpose_python.py --net_resolution -1x32 --image_dir ../../../examples/media/ --write_json output/ --display 0 --render_pose 0
     echo " "
+    # Note: All Python examples require GUI
   fi
 
   echo "Demos and tutorials successfully finished!"
